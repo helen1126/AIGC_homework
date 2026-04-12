@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Output directory
+output/
+
+# Model files (large files)
+models/sd/*
+models/lora/*
+
+# Configuration files (if they contain secrets)
+config.local.yaml
+
+# Temporary files
+*.tmp
+*.temp
+
+# Testing
+.coverage
+.pytest_cache/
+
+# Build files
+build/
+dist/
+*.egg-info/
+
+# Windows
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Package manager
+node_modules/

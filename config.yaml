@@ -1,0 +1,27 @@
+server:
+  host: "0.0.0.0"
+  port: 8000
+
+models:
+  sd_base_path: "./models/sd"
+  lora_base_path: "./models/lora"
+  default_sd_model: ""
+  default_lora_model: ""
+  pipeline_config: ""
+  offline_mode: false
+
+generation:
+  default_width: 512
+  default_height: 512
+  default_num_inference_steps: 20
+  default_guidance_scale: 7.5
+  default_seed: -1
+  default_scheduler: "euler"
+
+storage:
+  enabled: true
+  path: "./output"
+
+logging:
+  level: "INFO"
+  file: "./logs/app.log"
