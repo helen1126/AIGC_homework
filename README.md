@@ -61,13 +61,13 @@ git clone <项目仓库地址>
 cd AIGC_homework
 ```
 
-2. 安装依赖：
+1. 安装依赖：
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. 配置模型目录：
+1. 配置模型目录：
 
 在 `config.yaml` 文件中配置模型路径：
 
@@ -81,7 +81,7 @@ models:
   offline_mode: false               # 离线模式
 ```
 
-4. 准备模型：
+1. 准备模型：
 
 将SD基础模型和LoRA模型分别放入 `models/sd` 和 `models/lora` 目录。
 
@@ -180,10 +180,3 @@ if response.status_code == 200:
 2. 减少推理步数
 3. 使用较小的模型
 
-## 许可证
-
-本项目采用 MIT 许可证。
-
-## 联系方式
-
-如有问题或建议，请联系项目维护者。
