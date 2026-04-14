@@ -407,12 +407,3 @@ character_features:
   - 💾 智能缓存和历史记录功能
   - 📚 完整的API文档和测试套件
 
-## 许可证
-
-本项目采用 MIT 许可证。
-
-## 联系方式
-
-如有问题或建议，请通过以下方式联系：
-- GitHub Issues: [项目地址]/issues
-- Email: support@example.com
