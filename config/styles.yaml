@@ -1,0 +1,234 @@
+styles:
+  japanese:
+    name: "日系动漫"
+    description: "经典日式动漫风格，细腻的线条和柔和的色彩"
+    prompt_prefix: "anime style, Japanese anime, detailed anime art, "
+    prompt_suffix: ", high quality, masterpiece, best quality, vibrant colors"
+    negative_suffix: ", realistic, 3d render, photo"
+    quality_tags:
+      - "masterpiece"
+      - "best quality"
+      - "ultra-detailed"
+      - "illustration"
+    style_strength: 1.0
+
+  american_comic:
+    name: "美漫风格"
+    description: "美式漫画风格，粗犷的线条和强烈的对比"
+    prompt_prefix: "American comic style, comic book art, bold lines, "
+    prompt_suffix: ", dynamic composition, dramatic lighting, ink style"
+    negative_suffix: ", anime, manga, soft shading"
+    quality_tags:
+      - "comic book"
+      - "graphic novel"
+      - "bold outlines"
+      - "dynamic"
+    style_strength: 0.9
+
+  chibi_q:
+    name: "Q版萌系"
+    description: "可爱Q版风格，夸张的比例和大眼睛设计"
+    prompt_prefix: "chibi style, cute chibi, super deformed, big eyes, "
+    prompt_suffix: ", adorable, kawaii, pastel colors, soft shading"
+    negative_suffix: ", realistic, detailed anatomy, serious expression"
+    quality_tags:
+      - "chibi"
+      - "kawaii"
+      - "cute"
+      - "adorable"
+      - "super deformed"
+    style_strength: 1.1
+
+  watercolor:
+    name: "水彩风"
+    description: "水彩画风格的动漫艺术，柔和的色彩过渡"
+    prompt_prefix: "watercolor painting style, soft watercolors, artistic, "
+    prompt_suffix: ", flowing colors, delicate brushstrokes, ethereal atmosphere"
+    negative_suffix: ", digital art, sharp lines, photorealistic"
+    quality_tags:
+      - "watercolor"
+      - "painting"
+      - "artistic"
+      - "soft"
+      - "ethereal"
+    style_strength: 0.95
+
+  cyberpunk:
+    name: "赛博朋克"
+    description: "未来科技感的赛博朋克风格，霓虹色彩和机械元素"
+    prompt_prefix: "cyberpunk style, neon lights, futuristic, sci-fi, "
+    prompt_suffix: ", high-tech, digital art, glowing effects, dark background"
+    negative_suffix: ", traditional, natural, soft colors, vintage"
+    quality_tags:
+      - "cyberpunk"
+      - "futuristic"
+      - "neon"
+      - "sci-fi"
+      - "high-tech"
+    style_strength: 1.0
+
+  pixel_art:
+    name: "像素艺术"
+    description: "复古像素风格，8位/16位游戏美术风格"
+    prompt_prefix: "pixel art style, retro game art, 16-bit graphics, "
+    prompt_suffix: ", pixel perfect, retro gaming aesthetic, limited color palette"
+    negative_suffix: ", smooth, high resolution, photorealistic, modern"
+    quality_tags:
+      - "pixel art"
+      - "retro"
+      - "8-bit"
+      - "16-bit"
+      - "game art"
+    style_strength: 1.05
+
+character_features:
+  hair_style:
+    options:
+      - value: "long_hair"
+        label: "长发"
+        prompt_addition: "long hair, "
+      - value: "short_hair"
+        label: "短发"
+        prompt_addition: "short hair, "
+      - value: "twin_tails"
+        label: "双马尾"
+        prompt_addition: "twin tails, "
+      - value: "ponytail"
+        label: "马尾辫"
+        prompt_addition: "ponytail, "
+      - value: "bob_cut"
+        label: "波波头"
+        prompt_addition: "bob cut, "
+      - value: "spiky"
+        label: "刺猬头"
+        prompt_addition: "spiky hair, "
+
+  hair_color:
+    options:
+      - value: "black"
+        label: "黑色"
+        prompt_addition: "black hair, "
+      - value: "blonde"
+        label: "金色"
+        prompt_addition: "blonde hair, "
+      - value: "brown"
+        label: "棕色"
+        prompt_addition: "brown hair, "
+      - value: "red"
+        label: "红色"
+        prompt_addition: "red hair, "
+      - value: "blue"
+        label: "蓝色"
+        prompt_addition: "blue hair, "
+      - value: "pink"
+        label: "粉色"
+        prompt_addition: "pink hair, "
+      - value: "silver"
+        label: "银色"
+        prompt_addition: "silver hair, "
+      - value: "purple"
+        label: "紫色"
+        prompt_addition: "purple hair, "
+      - value: "gradient"
+        label: "渐变色"
+        prompt_addition: "gradient hair, multicolored hair, "
+
+  eye_color:
+    options:
+      - value: "blue"
+        label: "蓝色"
+        prompt_addition: "blue eyes, "
+      - value: "green"
+        label: "绿色"
+        prompt_addition: "green eyes, "
+      - value: "brown"
+        label: "棕色"
+        prompt_addition: "brown eyes, "
+      - value: "red"
+        label: "红色"
+        prompt_addition: "red eyes, "
+      - value: "gold"
+        label: "金色"
+        prompt_addition: "golden eyes, "
+      - value: "purple"
+        label: "紫色"
+        prompt_addition: "purple eyes, "
+      - value: "heterochromia"
+        label: "异色瞳"
+        prompt_addition: "heterochromia, different colored eyes, "
+
+  clothing_style:
+    options:
+      - value: "school_uniform"
+        label: "校服"
+        prompt_addition: "school uniform, "
+      - value: "casual"
+        label: "休闲装"
+        prompt_addition: "casual clothes, "
+      - value: "formal"
+        label: "正装"
+        prompt_addition: "formal attire, suit, "
+      - value: "fantasy_armor"
+        label: "奇幻铠甲"
+        prompt_addition: "fantasy armor, "
+      - value: "kimono"
+        label: "和服"
+        prompt_addition: "kimono, traditional japanese clothing, "
+      - value: "maid_outfit"
+        label: "女仆装"
+        prompt_addition: "maid outfit, "
+      - value: "gothic_lolita"
+        label: "哥特萝莉"
+        prompt_addition: "gothic lolita fashion, "
+      - value: "sporty"
+        label: "运动装"
+        prompt_addition: "sportswear, athletic wear, "
+
+  expression:
+    options:
+      - value: "happy"
+        label: "开心"
+        prompt_addition: "happy expression, smiling, "
+      - value: "serious"
+        label: "严肃"
+        prompt_addition: "serious expression, "
+      - value: "shy"
+        label: "害羞"
+        prompt_addition: "shy expression, blushing, "
+      - value: "angry"
+        label: "生气"
+        prompt_addition: "angry expression, "
+      - value: "sad"
+        label: "悲伤"
+        prompt_addition: "sad expression, "
+      - value: "mysterious"
+        label: "神秘"
+        prompt_addition: "mysterious expression, "
+      - value: "cool"
+        label: "酷炫"
+        prompt_addition: "cool expression, confident, "
+
+resolution_presets:
+  low:
+    width: 256
+    height: 256
+    label: "低分辨率 (256x256)"
+    description: "快速生成，适合预览"
+
+  medium:
+    width: 512
+    height: 512
+    label: "中等分辨率 (512x512)"
+    description: "平衡质量和速度"
+
+  high:
+    width: 768
+    height: 768
+    label: "高分辨率 (768x768)"
+    description: "较高质量，需要更多时间"
+
+  ultra:
+    width: 1024
+    height: 1024
+    label: "超高分辨率 (1024x1024)"
+    description: "最高质量，生成时间较长"

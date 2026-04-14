@@ -29,6 +29,16 @@ class GenerationConfig(BaseModel):
     default_scheduler: str = "euler"
 
 
+class AnimeAvatarConfig(BaseModel):
+    default_style: str = Field(default="japanese")
+    default_resolution: str = Field(default="medium")
+    default_quality_mode: str = Field(default="balanced")
+    cache_enabled: bool = Field(default=True)
+    cache_max_size: int = Field(default=100, ge=10, le=1000)
+    history_max_size: int = Field(default=1000, ge=100, le=10000)
+    max_generation_time: float = Field(default=10.0, ge=5.0, le=30.0)
+
+
 class StorageConfig(BaseModel):
     enabled: bool = True
     path: str = "./output"
@@ -43,6 +53,7 @@ class AppConfig(BaseModel):
     server: ServerConfig = ServerConfig()
     models: ModelsConfig = ModelsConfig()
     generation: GenerationConfig = GenerationConfig()
+    anime_avatar: AnimeAvatarConfig = AnimeAvatarConfig()
     storage: StorageConfig = StorageConfig()
     logging: LoggingConfig = LoggingConfig()
 

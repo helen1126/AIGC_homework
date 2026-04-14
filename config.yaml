@@ -18,6 +18,15 @@ generation:
   default_seed: -1
   default_scheduler: "euler"
 
+anime_avatar:
+  default_style: "japanese"
+  default_resolution: "medium"
+  default_quality_mode: "balanced"
+  cache_enabled: true
+  cache_max_size: 100
+  history_max_size: 1000
+  max_generation_time: 10.0
+
 storage:
   enabled: true
   path: "./output"

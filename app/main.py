@@ -11,6 +11,7 @@ from app.config import load_config, get_config
 from app.utils.logger import setup_logger, get_logger
 from app.utils.exceptions import SDAPIException, ERROR_CODES
 from app.routers import generation, model_management
+from app.routers import avatar, history
 from app.models.schemas import HealthResponse
 
 
@@ -18,7 +19,7 @@ from app.models.schemas import HealthResponse
 async def lifespan(app: FastAPI):
     config = load_config()
     logger = setup_logger()
-    logger.info("SD图片生成服务启动中...")
+    logger.info("AI动漫头像生成服务启动中...")
     logger.info(f"SD模型目录: {config.models.sd_base_path}")
     logger.info(f"LoRA模型目录: {config.models.lora_base_path}")
     logger.info(f"本地暂存: {'启用' if config.storage.enabled else '禁用'}")
@@ -29,21 +30,29 @@ async def lifespan(app: FastAPI):
     mm = get_model_manager()
     logger.info(f"默认SD模型: {mm.get_default_sd_model() or '无'}")
     logger.info(f"默认LoRA模型: {mm.get_default_lora_model() or '无'}")
-    logger.info("SD图片生成服务启动完成")
+
+    from app.services.style_manager import get_style_manager
+    sm = get_style_manager()
+    available_styles = sm.get_style_ids()
+    logger.info(f"可用动漫风格: {', '.join(available_styles)}")
+
+    from app.services.anime_avatar_service import get_anime_avatar_service
+    avatar_service = get_anime_avatar_service()
+    logger.info("AI动漫头像生成服务启动完成")
 
     yield
 
-    logger.info("SD图片生成服务关闭中...")
+    logger.info("AI动漫头像生成服务关闭中...")
     from app.services.sd_service import get_sd_service
     sd_service = get_sd_service()
     sd_service.unload_current_model()
-    logger.info("SD图片生成服务已关闭")
+    logger.info("AI动漫头像生成服务已关闭")
 
 
 app = FastAPI(
-    title="Stable Diffusion 图片生成服务",
-    description="基于FastAPI的Stable Diffusion图片生成后端服务，支持SD基础模型和LoRA扩展",
-    version="1.0.0",
+    title="AI动漫头像生成服务",
+    description="基于FastAPI的AI动漫头像生成后端服务，支持多种动漫风格、角色自定义和智能缓存",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -57,6 +66,8 @@ app.add_middleware(
 
 app.include_router(generation.router)
 app.include_router(model_management.router)
+app.include_router(avatar.router)
+app.include_router(history.router)
 
 
 @app.exception_handler(SDAPIException)
@@ -93,9 +104,13 @@ async def global_exception_handler(request: Request, exc: Exception):
     tags=["系统"],
 )
 async def health_check() -> HealthResponse:
-    return HealthResponse(status="ok", version="1.0.0")
+    return HealthResponse(status="ok", version="2.0.0")
 
 
 config = get_config()
 if config.storage.enabled and os.path.exists(config.storage.path):
     app.mount("/images", StaticFiles(directory=config.storage.path), name="images")
+
+_demo_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "demo")
+if os.path.isdir(_demo_dir):
+    app.mount("/demo", StaticFiles(directory=_demo_dir, html=True), name="demo")

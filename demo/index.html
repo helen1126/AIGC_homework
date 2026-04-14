@@ -3,302 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stable Diffusion 图片生成服务</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
-        }
-        .container {
-            max-width: 1200px;
-        }
-        .card {
-            margin-bottom: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .card-header {
-            background-color: #007bff;
-            color: white;
-            font-weight: bold;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .btn-primary {
-            background-color: #007bff;
-            border-color: #007bff;
-        }
-        .btn-primary:hover {
-            background-color: #0069d9;
-            border-color: #0062cc;
-        }
-        .result-image {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-        .error-message {
-            color: #dc3545;
-            margin-top: 10px;
-        }
-        .success-message {
-            color: #28a745;
-            margin-top: 10px;
-        }
-        .tab-content {
-            padding: 20px;
-            border: 1px solid #dee2e6;
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-        }
-        .nav-tabs {
-            margin-bottom: 0;
-        }
-        .nav-link {
-            color: #007bff;
-        }
-        .nav-link.active {
-            color: #0056b3;
-            font-weight: bold;
-        }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(0,123,255,.3);
-            border-radius: 50%;
-            border-top-color: #007bff;
-            animation: spin 1s ease-in-out infinite;
-            margin-left: 10px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
+    <title>AI动漫头像生成</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center mb-5">Stable Diffusion 图片生成服务</h1>
-        
-        <!-- 导航标签 -->
-        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="text2img-tab" data-bs-toggle="tab" data-bs-target="#text2img" type="button" role="tab" aria-controls="text2img" aria-selected="true">图片生成</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="models-tab" data-bs-toggle="tab" data-bs-target="#models" type="button" role="tab" aria-controls="models" aria-selected="false">模型管理</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="health-tab" data-bs-toggle="tab" data-bs-target="#health" type="button" role="tab" aria-controls="health" aria-selected="false">系统状态</button>
-            </li>
-        </ul>
-        
-        <!-- 标签内容 -->
-        <div class="tab-content" id="mainTabsContent">
-            <!-- 图片生成标签 -->
-            <div class="tab-pane fade show active" id="text2img" role="tabpanel" aria-labelledby="text2img-tab">
-                <div class="row">
-                    <!-- 完整参数模式 -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                文本生成图片（完整参数）
-                            </div>
-                            <div class="card-body">
-                                <form id="text2imgForm">
-                                    <div class="form-group">
-                                        <label for="prompt">正向提示词</label>
-                                        <textarea class="form-control" id="prompt" rows="3" required></textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="negative_prompt">反向提示词</label>
-                                        <textarea class="form-control" id="negative_prompt" rows="2"></textarea>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="width">宽度</label>
-                                                <input type="number" class="form-control" id="width" value="512" min="64" max="2048">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="height">高度</label>
-                                                <input type="number" class="form-control" id="height" value="512" min="64" max="2048">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="num_inference_steps">推理步数</label>
-                                                <input type="number" class="form-control" id="num_inference_steps" value="20" min="1" max="150">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label for="guidance_scale">引导系数</label>
-                                                <input type="number" class="form-control" id="guidance_scale" value="7.5" step="0.1" min="1.0" max="30.0">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="seed">随机种子</label>
-                                        <input type="number" class="form-control" id="seed" value="-1">
-                                        <small class="form-text text-muted">-1 表示随机</small>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="sd_model">SD基础模型</label>
-                                        <select class="form-control" id="sd_model"></select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="lora_model">LoRA模型</label>
-                                        <select class="form-control" id="lora_model"></select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="lora_weight">LoRA权重</label>
-                                        <input type="number" class="form-control" id="lora_weight" value="1.0" step="0.1" min="0.0" max="2.0">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="scheduler">采样器</label>
-                                        <select class="form-control" id="scheduler">
-                                            <option value="euler">Euler</option>
-                                            <option value="euler_a">Euler Ancestral</option>
-                                            <option value="dpm++2m">DPM++ 2M</option>
-                                            <option value="dpm++2m_karras">DPM++ 2M Karras</option>
-                                            <option value="ddim">DDIM</option>
-                                            <option value="lms">LMS</option>
-                                            <option value="pndm">PNDM</option>
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary w-100">生成图片</button>
-                                </form>
-                            </div>
-                        </div>
+    <header>
+        <h1>🎨 AI动漫头像生成</h1>
+        <p class="subtitle">基于Stable Diffusion的动漫风格头像生成演示</p>
+    </header>
+
+    <main>
+        <section class="config-panel">
+            <div class="panel-section">
+                <h2>📝 角色描述</h2>
+                <textarea id="description" placeholder="描述你想要生成的动漫角色，如：一位勇敢的女骑士，手持发光的剑" rows="3"></textarea>
+            </div>
+
+            <div class="panel-section">
+                <h2>🎭 动漫风格</h2>
+                <div id="style-options" class="option-grid"></div>
+            </div>
+
+            <div class="panel-section">
+                <h2>👤 角色特征</h2>
+                <div id="feature-options"></div>
+            </div>
+
+            <div class="panel-section">
+                <h2>🤖 模型选择</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sd-model">SD模型</label>
+                        <select id="sd-model">
+                            <option value="">默认模型</option>
+                        </select>
                     </div>
-                    
-                    <!-- 简单模式 -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                简单文本生成图片
-                            </div>
-                            <div class="card-body">
-                                <form id="text2imgSimpleForm">
-                                    <div class="form-group">
-                                        <label for="simple_prompt">正向提示词</label>
-                                        <textarea class="form-control" id="simple_prompt" rows="3" required></textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="simple_negative_prompt">反向提示词</label>
-                                        <textarea class="form-control" id="simple_negative_prompt" rows="2"></textarea>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="simple_sd_model">SD基础模型</label>
-                                        <select class="form-control" id="simple_sd_model"></select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="simple_lora_model">LoRA模型</label>
-                                        <select class="form-control" id="simple_lora_model"></select>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary w-100">生成图片</button>
-                                </form>
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label for="lora-model">LoRA模型</label>
+                        <select id="lora-model">
+                            <option value="">不使用LoRA</option>
+                        </select>
                     </div>
-                </div>
-                
-                <!-- 结果展示 -->
-                <div class="card mt-4">
-                    <div class="card-header">
-                        生成结果
-                    </div>
-                    <div class="card-body">
-                        <div id="result-container" class="text-center">
-                            <p id="result-message" class="text-muted">请生成图片后查看结果</p>
-                            <img id="result-image" class="result-image" style="display: none;">
-                            <div id="result-info" class="mt-3" style="display: none;">
-                                <h5>生成参数</h5>
-                                <pre id="result-params" class="text-left"></pre>
-                            </div>
-                        </div>
-                        <div id="error-message" class="error-message" style="display: none;"></div>
+                    <div class="form-group">
+                        <label for="lora-weight">LoRA权重: <span id="lora-weight-val">1.0</span></label>
+                        <input type="range" id="lora-weight" min="0" max="2" step="0.1" value="1.0">
                     </div>
                 </div>
             </div>
-            
-            <!-- 模型管理标签 -->
-            <div class="tab-pane fade" id="models" role="tabpanel" aria-labelledby="models-tab">
-                <div class="row">
-                    <!-- SD基础模型 -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                SD基础模型列表
-                            </div>
-                            <div class="card-body">
-                                <button id="refresh-sd-models" class="btn btn-primary mb-3">刷新模型列表</button>
-                                <div id="sd-models-list"></div>
-                            </div>
-                        </div>
+
+            <div class="panel-section">
+                <h2>⚙️ 生成参数</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="resolution">分辨率</label>
+                        <select id="resolution"></select>
                     </div>
-                    
-                    <!-- LoRA模型 -->
-                    <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header">
-                                LoRA模型列表
-                            </div>
-                            <div class="card-body">
-                                <button id="refresh-lora-models" class="btn btn-primary mb-3">刷新模型列表</button>
-                                <div id="lora-models-list"></div>
-                            </div>
-                        </div>
+                    <div class="form-group">
+                        <label for="quality-mode">质量模式</label>
+                        <select id="quality-mode">
+                            <option value="fast">快速</option>
+                            <option value="balanced" selected>平衡</option>
+                            <option value="quality">高质量</option>
+                        </select>
                     </div>
-                </div>
-                
-                <!-- 系统配置 -->
-                <div class="card mt-4">
-                    <div class="card-header">
-                        系统配置
-                    </div>
-                    <div class="card-body">
-                        <button id="get-config" class="btn btn-primary mb-3">获取配置</button>
-                        <div id="config-info"></div>
-                    </div>
-                </div>
-                
-                <!-- 刷新所有模型 -->
-                <div class="card mt-4">
-                    <div class="card-header">
-                        刷新模型列表
-                    </div>
-                    <div class="card-body">
-                        <p>重新扫描模型目录，更新可用模型列表和默认模型。适用于添加新模型后使用。</p>
-                        <button id="refresh-all-models" class="btn btn-primary">刷新所有模型</button>
-                        <div id="refresh-message" class="mt-3"></div>
+                    <div class="form-group">
+                        <label for="seed">随机种子</label>
+                        <input type="number" id="seed" value="-1" min="-1" max="4294967295">
                     </div>
                 </div>
             </div>
-            
-            <!-- 系统状态标签 -->
-            <div class="tab-pane fade" id="health" role="tabpanel" aria-labelledby="health-tab">
-                <div class="card">
-                    <div class="card-header">
-                        健康检查
+
+            <div class="panel-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="user-id">用户标识</label>
+                        <input type="text" id="user-id" value="demo_user" maxlength="100">
                     </div>
-                    <div class="card-body">
-                        <button id="check-health" class="btn btn-primary">检查服务状态</button>
-                        <div id="health-status" class="mt-3"></div>
+                    <div class="form-group generate-group">
+                        <button id="generate-btn" class="btn-generate" onclick="generateAvatar()">
+                            ✨ 生成头像
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="script.js"></script>
+        </section>
+
+        <section class="result-panel">
+            <h2>🖼️ 生成结果</h2>
+            <div id="result-container" class="result-container">
+                <div id="placeholder" class="placeholder">
+                    <p>👈 配置参数后点击"生成头像"</p>
+                </div>
+                <div id="loading" class="loading" style="display:none;">
+                    <div class="spinner"></div>
+                    <p>正在生成中，请稍候...</p>
+                </div>
+                <div id="result" style="display:none;">
+                    <img id="result-image" src="" alt="生成的头像">
+                    <div id="result-info" class="result-info"></div>
+                </div>
+                <div id="error" class="error" style="display:none;"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>AI动漫头像生成服务 v2.0 | <a href="/docs" target="_blank">API文档</a></p>
+    </footer>
+
+    <script src="app.js"></script>
 </body>
 </html>
