@@ -21,12 +21,12 @@ class AnimeAvatarService:
         self._sd_service = get_sd_service()
         self._generation_history: List[Dict[str, Any]] = []
         self._cache: Dict[str, Dict[str, Any]] = {}
-        self._cache_max_size: int = 100
-        self._history_max_size: int = 1000
+        self._cache_max_size: int = self._config.anime_avatar.cache_max_size
+        self._history_max_size: int = self._config.anime_avatar.history_max_size
 
     def generate_avatar(self, params: dict) -> dict:
         start_time = time.time()
-        
+
         base_description = params.get("description", "anime character portrait")
         style_id = params.get("style", "japanese")
         character_features = params.get("character_features", {})
@@ -39,10 +39,10 @@ class AnimeAvatarService:
         lora_weight = params.get("lora_weight", 1.0)
 
         cache_key = self._generate_cache_key(params)
-        
+
         cached_result = self._get_from_cache(cache_key)
         if cached_result:
-            self._logger.info(f"使用缓存结果，跳过生成")
+            self._logger.info("使用缓存结果，跳过生成")
             return {
                 **cached_result,
                 "cached": True,
@@ -86,9 +86,10 @@ class AnimeAvatarService:
             result = self._sd_service.generate(sd_params)
 
             elapsed_time = time.time() - start_time
-            
-            if elapsed_time > 10:
-                self._logger.warning(f"生成时间超过10秒限制: {elapsed_time:.2f}秒")
+
+            max_time = self._config.anime_avatar.max_generation_time
+            if elapsed_time > max_time:
+                self._logger.warning(f"生成时间超过{max_time}秒限制: {elapsed_time:.2f}秒")
 
             avatar_data = {
                 "success": result["success"],
@@ -118,9 +119,11 @@ class AnimeAvatarService:
 
             return avatar_data
 
+        except GenerationError:
+            raise
         except Exception as e:
             self._logger.error(f"动漫头像生成失败: {str(e)}", exc_info=True)
-            raise GenerationError(f"动漫头像生成失败: {str(e)}")
+            raise GenerationError(str(e))
 
     def _generate_cache_key(self, params: dict) -> str:
         cache_data = {
@@ -145,7 +148,7 @@ class AnimeAvatarService:
 
     def _add_to_cache(self, cache_key: str, data: dict) -> None:
         if len(self._cache) >= self._cache_max_size:
-            oldest_key = min(self._cache.keys(), 
+            oldest_key = min(self._cache.keys(),
                            key=lambda k: self._cache[k].get("last_accessed", 0))
             del self._cache[oldest_key]
 
@@ -174,7 +177,7 @@ class AnimeAvatarService:
 
         self._logger.debug(f"已添加到历史记录: #{history_entry['id']}")
 
-    def _optimize_for_speed(self, width: int, height: int, 
+    def _optimize_for_speed(self, width: int, height: int,
                            quality_mode: str) -> dict:
         optimizations = {
             "fast": {
@@ -200,8 +203,8 @@ class AnimeAvatarService:
             }
         }
 
-        mode_config = optimizations.get(quality_mode, optimizations["balanced"])
-        
+        mode_config = dict(optimizations.get(quality_mode, optimizations["balanced"]))
+
         max_dimension = 1024
         if mode_config["width"] > max_dimension or mode_config["height"] > max_dimension:
             scale = max_dimension / max(mode_config["width"], mode_config["height"])
@@ -210,10 +213,10 @@ class AnimeAvatarService:
 
         return mode_config
 
-    def get_generation_history(self, user_id: Optional[str] = None, 
+    def get_generation_history(self, user_id: Optional[str] = None,
                                limit: int = 20, offset: int = 0) -> dict:
         history = self._generation_history
-        
+
         if user_id and user_id != "all":
             history = [h for h in history if h.get("user_id") == user_id]
 
@@ -243,6 +246,14 @@ class AnimeAvatarService:
         presets = self._style_manager.get_all_resolution_presets()
         return [preset.to_dict() for preset in presets]
 
+    def get_cache_stats(self) -> dict:
+        return {
+            "cache_size": len(self._cache),
+            "cache_max_size": self._cache_max_size,
+            "history_size": len(self._generation_history),
+            "history_max_size": self._history_max_size,
+        }
+
     def clear_cache(self) -> int:
         cache_size = len(self._cache)
         self._cache.clear()
@@ -253,7 +264,7 @@ class AnimeAvatarService:
         if user_id and user_id != "all":
             before_count = len(self._generation_history)
             self._generation_history = [
-                h for h in self._generation_history 
+                h for h in self._generation_history
                 if h.get("user_id") != user_id
             ]
             removed_count = before_count - len(self._generation_history)

@@ -69,9 +69,6 @@ class ResolutionPreset:
 
 class StyleManager:
     _instance: Optional['StyleManager'] = None
-    _styles: Dict[str, StyleConfig] = {}
-    _character_features: Dict[str, CharacterFeature] = {}
-    _resolution_presets: Dict[str, ResolutionPreset] = {}
 
     def __new__(cls) -> 'StyleManager':
         if cls._instance is None:
@@ -82,6 +79,9 @@ class StyleManager:
     def __init__(self):
         if not getattr(self, '_initialized', False):
             self._logger = get_logger()
+            self._styles: Dict[str, StyleConfig] = {}
+            self._character_features: Dict[str, CharacterFeature] = {}
+            self._resolution_presets: Dict[str, ResolutionPreset] = {}
             self._load_styles_config()
             self._initialized = True
 

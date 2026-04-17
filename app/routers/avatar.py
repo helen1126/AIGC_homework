@@ -27,7 +27,7 @@ router = APIRouter(
 async def generate_avatar(request: AvatarGenerationRequest) -> AvatarGenerationResponse:
     try:
         service = get_anime_avatar_service()
-        
+
         params = {
             "description": request.description,
             "style": request.style,
@@ -39,20 +39,23 @@ async def generate_avatar(request: AvatarGenerationRequest) -> AvatarGenerationR
             "lora": request.lora,
             "lora_weight": request.lora_weight,
         }
-        
+
         if request.character_features:
-            params["character_features"] = {
-                k: v for k, v in request.character_features.dict().items() 
-                if v is not None
-            }
-        
+            if hasattr(request.character_features, "model_dump"):
+                features_raw = request.character_features.model_dump(exclude_none=True)
+            else:
+                features_raw = request.character_features.dict(exclude_none=True)
+            params["character_features"] = features_raw
+
         if request.reference_image:
             params["reference_image"] = request.reference_image
-        
+
         result = service.generate_avatar(params)
-        
+
         return AvatarGenerationResponse(**result)
-    
+
+    except SDAPIException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except GenerationError as e:

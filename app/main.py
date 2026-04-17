@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import load_config, get_config
 from app.utils.logger import setup_logger, get_logger
-from app.utils.exceptions import SDAPIException, ERROR_CODES
+from app.utils.exceptions import SDAPIException, AppError, ERROR_CODES
 from app.routers import generation, model_management
 from app.routers import avatar, history
 from app.models.schemas import HealthResponse
@@ -77,6 +77,18 @@ async def sd_api_exception_handler(request: Request, exc: SDAPIException):
         content={
             "success": False,
             "error_code": exc.error_code,
+            "message": exc.message,
+        },
+    )
+
+
+@app.exception_handler(AppError)
+async def app_error_handler(request: Request, exc: AppError):
+    return JSONResponse(
+        status_code=500,
+        content={
+            "success": False,
+            "error_code": "GENERATION_FAILED",
             "message": exc.message,
         },
     )

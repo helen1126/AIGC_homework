@@ -11,6 +11,22 @@ class SDAPIException(HTTPException):
         })
 
 
+class AppError(Exception):
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(message)
+
+
+class GenerationError(AppError):
+    def __init__(self, detail: str):
+        super().__init__(f"图片生成失败: {detail}")
+
+
+class StorageError(AppError):
+    def __init__(self, detail: str):
+        super().__init__(f"存储错误: {detail}")
+
+
 class ModelNotFoundError(SDAPIException):
     def __init__(self, model_name: str, model_type: str = "SD"):
         super().__init__(
@@ -38,30 +54,12 @@ class NoModelAvailableError(SDAPIException):
         )
 
 
-class GenerationError(SDAPIException):
-    def __init__(self, detail: str):
-        super().__init__(
-            status_code=500,
-            error_code="GENERATION_FAILED",
-            message=f"图片生成失败: {detail}",
-        )
-
-
 class InvalidParameterError(SDAPIException):
     def __init__(self, param_name: str, reason: str):
         super().__init__(
             status_code=422,
             error_code="INVALID_PARAMETER",
             message=f"参数 '{param_name}' 无效: {reason}",
-        )
-
-
-class StorageError(SDAPIException):
-    def __init__(self, detail: str):
-        super().__init__(
-            status_code=500,
-            error_code="STORAGE_ERROR",
-            message=f"存储错误: {detail}",
         )
 
 

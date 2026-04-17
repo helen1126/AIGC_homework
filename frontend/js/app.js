@@ -25,27 +25,59 @@
 
     function $(id) { return document.getElementById(id); }
 
+    function esc(str) {
+        const d = document.createElement("div");
+        d.textContent = String(str ?? "");
+        return d.innerHTML;
+    }
+
     function toast(msg, type = "info") {
         const container = $("toast-container");
         const el = document.createElement("div");
         el.className = `toast ${type}`;
         el.textContent = msg;
         container.appendChild(el);
-        setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 300); }, 3500);
+        setTimeout(() => {
+            el.style.opacity = "0";
+            el.style.transition = "opacity 0.3s";
+            setTimeout(() => el.remove(), 300);
+        }, 3500);
     }
 
     function showResult(area, state) {
-        const ids = ["placeholder", "loading", "result", "error"];
-        ids.forEach(id => {
+        ["placeholder", "loading", "result", "error"].forEach(id => {
             const el = $(`${area}-${id}`);
             if (el) el.style.display = id === state ? "" : "none";
         });
+    }
+
+    function setMetaGrid(gridId, items) {
+        const grid = $(gridId);
+        grid.innerHTML = "";
+        for (const [label, value, isHtml] of items) {
+            const item = document.createElement("div");
+            item.className = "meta-item";
+            const labelSpan = document.createElement("span");
+            labelSpan.className = "meta-label";
+            labelSpan.textContent = label;
+            const valueSpan = document.createElement("span");
+            valueSpan.className = "meta-value";
+            if (isHtml) {
+                valueSpan.innerHTML = value;
+            } else {
+                valueSpan.textContent = String(value ?? "-");
+            }
+            item.appendChild(labelSpan);
+            item.appendChild(valueSpan);
+            grid.appendChild(item);
+        }
     }
 
     async function init() {
         setupNavigation();
         setupMobileMenu();
         setupSliders();
+        setupKeyboard();
         await checkHealth();
         await Promise.all([
             loadStyles(),
@@ -63,8 +95,7 @@
         document.querySelectorAll(".nav-item").forEach(item => {
             item.addEventListener("click", (e) => {
                 e.preventDefault();
-                const page = item.dataset.page;
-                switchPage(page);
+                switchPage(item.dataset.page);
             });
         });
     }
@@ -75,7 +106,6 @@
         document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
         $(`page-${page}`)?.classList.add("active");
         closeMobileMenu();
-
         if (page === "history") loadHistory();
         if (page === "models") loadModelsPage();
         if (page === "system") loadSystemPage();
@@ -103,6 +133,17 @@
         });
     }
 
+    function setupKeyboard() {
+        document.addEventListener("keydown", (e) => {
+            if (e.ctrlKey && e.key === "Enter") {
+                e.preventDefault();
+                const activePage = document.querySelector(".page.active");
+                if (activePage?.id === "page-avatar") generateAvatar();
+                else if (activePage?.id === "page-generation") generateImage();
+            }
+        });
+    }
+
     async function checkHealth() {
         const indicator = $("server-status");
         const mobileDot = $("status-mobile");
@@ -126,9 +167,14 @@
             for (const s of data.styles) {
                 const card = document.createElement("div");
                 card.className = "style-card" + (s.id === selectedStyle ? " active" : "");
-                card.innerHTML = `
-                    <div class="style-name">${STYLE_ICONS[s.id] || "🎨"} ${s.name}</div>
-                    <div class="style-desc">${s.description}</div>`;
+                const nameEl = document.createElement("div");
+                nameEl.className = "style-name";
+                nameEl.textContent = `${STYLE_ICONS[s.id] || "🎨"} ${s.name}`;
+                const descEl = document.createElement("div");
+                descEl.className = "style-desc";
+                descEl.textContent = s.description;
+                card.appendChild(nameEl);
+                card.appendChild(descEl);
                 card.addEventListener("click", () => {
                     grid.querySelectorAll(".style-card").forEach(c => c.classList.remove("active"));
                     card.classList.add("active");
@@ -181,7 +227,7 @@
             for (const p of data.presets) {
                 const o = document.createElement("option");
                 o.value = p.id;
-                o.textContent = `${p.label}`;
+                o.textContent = p.label;
                 if (p.id === "medium") o.selected = true;
                 select.appendChild(o);
             }
@@ -233,7 +279,11 @@
 
     async function generateAvatar() {
         const desc = $("avatar-desc").value.trim();
-        if (!desc) { toast("请输入角色描述", "error"); return; }
+        if (!desc) {
+            toast("请输入角色描述", "error");
+            $("avatar-desc").focus();
+            return;
+        }
 
         const btn = $("avatar-generate-btn");
         btn.disabled = true;
@@ -281,25 +331,25 @@
         $("avatar-actions").style.display = "";
 
         const params = data.parameters || {};
-        const items = [
+        setMetaGrid("avatar-meta-grid", [
             ["风格", data.style_used],
             ["分辨率", `${data.resolution.width}×${data.resolution.height}`],
             ["种子", data.seed],
             ["耗时", `${data.generation_time}s`],
-            ["缓存", data.cached ? '<span class="badge badge-success">命中</span>' : "否"],
-            ["SD模型", params.sd_model ? `<span class="badge badge-info">${params.sd_model}</span>` : "默认"],
-            ["LoRA", params.lora_model ? `<span class="badge badge-accent">${params.lora_model}</span>` : "无"],
-            ["LoRA权重", params.lora_weight && params.lora_model ? params.lora_weight : "-"],
-        ];
-
-        $("avatar-meta-grid").innerHTML = items.map(([l, v]) =>
-            `<div class="meta-item"><span class="meta-label">${l}</span><span class="meta-value">${v}</span></div>`
-        ).join("");
+            ["缓存", data.cached ? "命中" : "否", false],
+            ["SD模型", params.sd_model || "默认"],
+            ["LoRA", params.lora_model || "无"],
+            ["LoRA权重", params.lora_model ? params.lora_weight : "-"],
+        ]);
     }
 
     async function generateImage() {
         const prompt = $("gen-prompt").value.trim();
-        if (!prompt) { toast("请输入正向提示词", "error"); return; }
+        if (!prompt) {
+            toast("请输入正向提示词", "error");
+            $("gen-prompt").focus();
+            return;
+        }
 
         const btn = $("gen-generate-btn");
         btn.disabled = true;
@@ -343,20 +393,16 @@
         $("gen-actions").style.display = "";
 
         const p = data.parameters || {};
-        const items = [
+        setMetaGrid("gen-meta-grid", [
             ["尺寸", `${p.width}×${p.height}`],
             ["种子", data.seed],
             ["步数", p.num_inference_steps],
             ["CFG", p.guidance_scale],
-            ["耗时", "-"],
-            ["采样器", p.scheduler || "-"],
-            ["SD模型", p.sd_model ? `<span class="badge badge-info">${p.sd_model}</span>` : "默认"],
-            ["LoRA", p.lora_model ? `<span class="badge badge-accent">${p.lora_model}</span>` : "无"],
-        ];
-
-        $("gen-meta-grid").innerHTML = items.map(([l, v]) =>
-            `<div class="meta-item"><span class="meta-label">${l}</span><span class="meta-value">${v}</span></div>`
-        ).join("");
+            ["采样器", p.scheduler],
+            ["SD模型", p.sd_model || "默认"],
+            ["LoRA", p.lora_model || "无"],
+            ["LoRA权重", p.lora_model ? p.lora_weight : "-"],
+        ]);
     }
 
     window.downloadAvatar = function () {
@@ -397,7 +443,7 @@
         const empty = $("history-empty");
         const pagination = $("history-pagination");
 
-        if (data.records.length === 0) {
+        if (!data.records || data.records.length === 0) {
             body.innerHTML = "";
             empty.style.display = "";
             pagination.innerHTML = "";
@@ -405,27 +451,40 @@
         }
         empty.style.display = "none";
 
-        body.innerHTML = data.records.map(r => `
-            <tr>
-                <td>${r.id}</td>
-                <td>${formatTime(r.timestamp)}</td>
-                <td>${r.user_id}</td>
-                <td><span class="badge badge-accent">${r.style}</span></td>
-                <td>${r.resolution}</td>
-                <td>${r.generation_time}s</td>
-                <td>${r.seed}</td>
-            </tr>`).join("");
+        body.innerHTML = "";
+        for (const r of data.records) {
+            const tr = document.createElement("tr");
+            const fields = [r.id, formatTime(r.timestamp), r.user_id, r.style, r.resolution, `${r.generation_time}s`, r.seed];
+            for (const f of fields) {
+                const td = document.createElement("td");
+                td.textContent = String(f ?? "-");
+                tr.appendChild(td);
+            }
+            body.appendChild(tr);
+        }
 
         const hasPrev = historyOffset > 0;
         const hasNext = data.has_more;
-        pagination.innerHTML = `
-            <button ${hasPrev ? "" : "disabled"} onclick="window.__histPrev()">上一页</button>
-            <span class="page-info">共 ${data.total} 条</span>
-            <button ${hasNext ? "" : "disabled"} onclick="window.__histNext()">下一页</button>`;
-    }
+        pagination.innerHTML = "";
 
-    window.__histPrev = () => { historyOffset = Math.max(0, historyOffset - historyLimit); loadHistory(); };
-    window.__histNext = () => { historyOffset += historyLimit; loadHistory(); };
+        const prevBtn = document.createElement("button");
+        prevBtn.textContent = "上一页";
+        prevBtn.disabled = !hasPrev;
+        prevBtn.addEventListener("click", () => { historyOffset = Math.max(0, historyOffset - historyLimit); loadHistory(); });
+
+        const info = document.createElement("span");
+        info.className = "page-info";
+        info.textContent = `共 ${data.total} 条`;
+
+        const nextBtn = document.createElement("button");
+        nextBtn.textContent = "下一页";
+        nextBtn.disabled = !hasNext;
+        nextBtn.addEventListener("click", () => { historyOffset += historyLimit; loadHistory(); });
+
+        pagination.appendChild(prevBtn);
+        pagination.appendChild(info);
+        pagination.appendChild(nextBtn);
+    }
 
     window.loadHistory = loadHistory;
 
@@ -453,22 +512,42 @@
 
     function renderModelList(containerId, models, type) {
         const container = $(containerId);
-        if (models.length === 0) {
-            container.innerHTML = `<div class="empty-state"><p>暂无${type}模型</p></div>`;
+        container.innerHTML = "";
+        if (!models || models.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "empty-state";
+            empty.textContent = `暂无${type}模型`;
+            container.appendChild(empty);
             return;
         }
-        container.innerHTML = models.map(m => `
-            <div class="model-item">
-                <div>
-                    <div class="model-name">${m.name} ${m.is_default ? '<span class="badge badge-success">默认</span>' : ""}</div>
-                    <div class="model-path">${m.path}</div>
-                </div>
-            </div>`).join("");
+        for (const m of models) {
+            const item = document.createElement("div");
+            item.className = "model-item";
+
+            const info = document.createElement("div");
+            const nameEl = document.createElement("div");
+            nameEl.className = "model-name";
+            nameEl.textContent = m.name;
+            if (m.is_default) {
+                const badge = document.createElement("span");
+                badge.className = "badge badge-success";
+                badge.textContent = "默认";
+                nameEl.appendChild(document.createTextNode(" "));
+                nameEl.appendChild(badge);
+            }
+            const pathEl = document.createElement("div");
+            pathEl.className = "model-path";
+            pathEl.textContent = m.path || "";
+            info.appendChild(nameEl);
+            info.appendChild(pathEl);
+            item.appendChild(info);
+            container.appendChild(item);
+        }
     }
 
     window.refreshModels = async function () {
         try {
-            const data = await API.refreshModels();
+            await API.refreshModels();
             toast("模型列表已刷新", "success");
             loadModelsPage();
             loadSdModels("avatar-sd-model");
@@ -490,34 +569,101 @@
 
             if (cacheData) {
                 const cachePct = cacheData.cache_max_size > 0 ? (cacheData.cache_size / cacheData.cache_max_size * 100) : 0;
-                $("cache-stats").innerHTML = `
-                    <div class="stat-item"><div class="stat-value">${cacheData.cache_size}</div><div class="stat-label">缓存条目</div></div>
-                    <div class="stat-item"><div class="stat-value">${cacheData.cache_max_size}</div><div class="stat-label">最大容量</div></div>
-                    <div class="stat-item"><div class="stat-value">${cacheData.history_size}</div><div class="stat-label">历史记录</div></div>
-                    <div class="stat-item"><div class="stat-value">${cacheData.history_max_size}</div><div class="stat-label">历史上限</div></div>
-                    <div style="grid-column:1/-1"><div class="cache-bar"><div class="cache-bar-fill" style="width:${cachePct}%"></div></div></div>`;
+                const statsEl = $("cache-stats");
+                statsEl.innerHTML = "";
+
+                const statItems = [
+                    [cacheData.cache_size, "缓存条目"],
+                    [cacheData.cache_max_size, "最大容量"],
+                    [cacheData.history_size, "历史记录"],
+                    [cacheData.history_max_size, "历史上限"],
+                ];
+                for (const [val, label] of statItems) {
+                    const item = document.createElement("div");
+                    item.className = "stat-item";
+                    const valEl = document.createElement("div");
+                    valEl.className = "stat-value";
+                    valEl.textContent = val;
+                    const labelEl = document.createElement("div");
+                    labelEl.className = "stat-label";
+                    labelEl.textContent = label;
+                    item.appendChild(valEl);
+                    item.appendChild(labelEl);
+                    statsEl.appendChild(item);
+                }
+
+                const barWrap = document.createElement("div");
+                barWrap.style.gridColumn = "1/-1";
+                const bar = document.createElement("div");
+                bar.className = "cache-bar";
+                const fill = document.createElement("div");
+                fill.className = "cache-bar-fill";
+                fill.style.width = `${cachePct}%`;
+                bar.appendChild(fill);
+                barWrap.appendChild(bar);
+                statsEl.appendChild(barWrap);
             }
 
             if (configData) {
                 const g = configData.generation_defaults || {};
-                $("system-config").innerHTML = `
-                    <div class="config-item"><span class="config-key">默认宽度</span><span class="config-val">${g.width || "-"}</span></div>
-                    <div class="config-item"><span class="config-key">默认高度</span><span class="config-val">${g.height || "-"}</span></div>
-                    <div class="config-item"><span class="config-key">默认步数</span><span class="config-val">${g.num_inference_steps || "-"}</span></div>
-                    <div class="config-item"><span class="config-key">默认CFG</span><span class="config-val">${g.guidance_scale || "-"}</span></div>
-                    <div class="config-item"><span class="config-key">默认采样器</span><span class="config-val">${g.scheduler || "-"}</span></div>
-                    <div class="config-item"><span class="config-key">本地暂存</span><span class="config-val">${configData.storage_enabled ? "启用" : "禁用"}</span></div>
-                    <div class="config-item"><span class="config-key">暂存路径</span><span class="config-val">${configData.storage_path || "-"}</span></div>
-                    <div class="config-item"><span class="config-key">SD模型目录</span><span class="config-val">${configData.sd_models_path || "-"}</span></div>
-                    <div class="config-item"><span class="config-key">LoRA模型目录</span><span class="config-val">${configData.lora_models_path || "-"}</span></div>`;
+                const configItems = [
+                    ["默认宽度", g.width],
+                    ["默认高度", g.height],
+                    ["默认步数", g.num_inference_steps],
+                    ["默认CFG", g.guidance_scale],
+                    ["默认采样器", g.scheduler],
+                    ["本地暂存", configData.storage_enabled ? "启用" : "禁用"],
+                    ["暂存路径", configData.storage_path],
+                    ["SD模型目录", configData.sd_models_path],
+                    ["LoRA模型目录", configData.lora_models_path],
+                ];
+                const configEl = $("system-config");
+                configEl.innerHTML = "";
+                for (const [key, val] of configItems) {
+                    const item = document.createElement("div");
+                    item.className = "config-item";
+                    const keySpan = document.createElement("span");
+                    keySpan.className = "config-key";
+                    keySpan.textContent = key;
+                    const valSpan = document.createElement("span");
+                    valSpan.className = "config-val";
+                    valSpan.textContent = String(val ?? "-");
+                    item.appendChild(keySpan);
+                    item.appendChild(valSpan);
+                    configEl.appendChild(item);
+                }
             }
 
+            const statusEl = $("service-status");
+            statusEl.innerHTML = "";
+            const row = document.createElement("div");
+            row.className = "status-row";
+            const label = document.createElement("span");
+            label.textContent = "服务状态";
+            const badge = document.createElement("span");
             if (healthData) {
-                $("service-status").innerHTML = `
-                    <div class="status-row"><span>服务状态</span><span class="badge badge-success">在线</span></div>
-                    <div class="status-row"><span>版本</span><span>v${healthData.version || "2.0.0"}</span></div>`;
+                badge.className = "badge badge-success";
+                badge.textContent = "在线";
             } else {
-                $("service-status").innerHTML = `<div class="status-row"><span>服务状态</span><span class="badge badge-warning" style="background:rgba(248,113,113,0.15);color:var(--danger)">离线</span></div>`;
+                badge.className = "badge";
+                badge.style.background = "rgba(248,113,113,0.15)";
+                badge.style.color = "var(--danger)";
+                badge.textContent = "离线";
+            }
+            row.appendChild(label);
+            row.appendChild(badge);
+            statusEl.appendChild(row);
+
+            if (healthData) {
+                const verRow = document.createElement("div");
+                verRow.className = "status-row";
+                const verLabel = document.createElement("span");
+                verLabel.textContent = "版本";
+                const verVal = document.createElement("span");
+                verVal.textContent = `v${healthData.version || "2.0.0"}`;
+                verRow.appendChild(verLabel);
+                verRow.appendChild(verVal);
+                statusEl.appendChild(verRow);
             }
         } catch (e) {
             console.error("加载系统信息失败:", e);

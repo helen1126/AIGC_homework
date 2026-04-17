@@ -1,12 +1,20 @@
 const API = (() => {
     const BASE = window.location.origin;
 
+    const modelCache = {
+        sd: { data: null, ts: 0 },
+        lora: { data: null, ts: 0 },
+    };
+    const CACHE_TTL = 30000;
+
     async function request(method, path, body = null, timeout = 120000) {
         const opts = {
             method,
             headers: { "Content-Type": "application/json" },
-            signal: AbortSignal.timeout(timeout),
         };
+        if (typeof AbortSignal.timeout === "function") {
+            opts.signal = AbortSignal.timeout(timeout);
+        }
         if (body && method !== "GET") opts.body = JSON.stringify(body);
         const resp = await fetch(`${BASE}${path}`, opts);
         const data = await resp.json();
@@ -15,6 +23,27 @@ const API = (() => {
             throw new Error(msg);
         }
         return data;
+    }
+
+    async function getSdModelsCached() {
+        const entry = modelCache.sd;
+        if (entry.data && Date.now() - entry.ts < CACHE_TTL) return entry.data;
+        const data = await request("GET", "/api/v1/models/sd");
+        modelCache.sd = { data, ts: Date.now() };
+        return data;
+    }
+
+    async function getLoraModelsCached() {
+        const entry = modelCache.lora;
+        if (entry.data && Date.now() - entry.ts < CACHE_TTL) return entry.data;
+        const data = await request("GET", "/api/v1/models/lora");
+        modelCache.lora = { data, ts: Date.now() };
+        return data;
+    }
+
+    function invalidateModelCache() {
+        modelCache.sd = { data: null, ts: 0 };
+        modelCache.lora = { data: null, ts: 0 };
     }
 
     return {
@@ -40,9 +69,12 @@ const API = (() => {
         getCacheStats: () => request("GET", "/api/v1/cache/stats"),
         clearCache: () => request("DELETE", "/api/v1/cache"),
 
-        getSdModels: () => request("GET", "/api/v1/models/sd"),
-        getLoraModels: () => request("GET", "/api/v1/models/lora"),
-        refreshModels: () => request("POST", "/api/v1/models/refresh"),
+        getSdModels: getSdModelsCached,
+        getLoraModels: getLoraModelsCached,
+        refreshModels: () => request("POST", "/api/v1/models/refresh").then(data => {
+            invalidateModelCache();
+            return data;
+        }),
         getSystemConfig: () => request("GET", "/api/v1/models/config"),
     };
 })();
