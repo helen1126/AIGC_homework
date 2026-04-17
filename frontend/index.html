@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI动漫头像生成服务</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">🎨</div>
+            <h1 class="sidebar-title">AI头像生成</h1>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-page="avatar">
+                <span class="nav-icon">🎭</span>
+                <span class="nav-text">动漫头像</span>
+            </a>
+            <a href="#" class="nav-item" data-page="generation">
+                <span class="nav-icon">🖼️</span>
+                <span class="nav-text">图片生成</span>
+            </a>
+            <a href="#" class="nav-item" data-page="history">
+                <span class="nav-icon">📋</span>
+                <span class="nav-text">历史记录</span>
+            </a>
+            <a href="#" class="nav-item" data-page="models">
+                <span class="nav-icon">🤖</span>
+                <span class="nav-text">模型管理</span>
+            </a>
+            <a href="#" class="nav-item" data-page="system">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-text">系统管理</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="status-indicator" id="server-status">
+                <span class="status-dot"></span>
+                <span class="status-text">检测中...</span>
+            </div>
+        </div>
+    </aside>
+
+    <div class="mobile-header">
+        <button class="menu-btn" id="menu-btn">☰</button>
+        <h1>🎨 AI头像生成</h1>
+        <div class="status-dot-mobile" id="status-mobile"></div>
+    </div>
+
+    <main class="main-content">
+        <!-- 动漫头像生成页 -->
+        <div class="page active" id="page-avatar">
+            <div class="page-header">
+                <h2>动漫头像生成</h2>
+                <p class="page-desc">选择风格、自定义角色特征，生成独一无二的动漫头像</p>
+            </div>
+            <div class="avatar-layout">
+                <div class="avatar-config">
+                    <div class="card">
+                        <h3 class="card-title">📝 角色描述</h3>
+                        <textarea id="avatar-desc" placeholder="描述你想要生成的动漫角色，如：一位勇敢的女骑士，手持发光的剑" rows="3"></textarea>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">🎭 动漫风格</h3>
+                        <div class="style-grid" id="style-grid"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">👤 角色特征</h3>
+                        <div class="features-grid" id="features-grid"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">🤖 模型配置</h3>
+                        <div class="form-grid-3">
+                            <div class="form-field">
+                                <label>SD模型</label>
+                                <select id="avatar-sd-model"><option value="">默认模型</option></select>
+                            </div>
+                            <div class="form-field">
+                                <label>LoRA模型</label>
+                                <select id="avatar-lora-model"><option value="">不使用</option></select>
+                            </div>
+                            <div class="form-field">
+                                <label>LoRA权重: <span id="lora-weight-display">1.0</span></label>
+                                <input type="range" id="avatar-lora-weight" min="0" max="2" step="0.1" value="1.0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">⚙️ 生成参数</h3>
+                        <div class="form-grid-3">
+                            <div class="form-field">
+                                <label>分辨率</label>
+                                <select id="avatar-resolution"></select>
+                            </div>
+                            <div class="form-field">
+                                <label>质量模式</label>
+                                <select id="avatar-quality">
+                                    <option value="fast">⚡ 快速</option>
+                                    <option value="balanced" selected>⚖️ 平衡</option>
+                                    <option value="quality">💎 高质量</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>随机种子</label>
+                                <div class="seed-input">
+                                    <input type="number" id="avatar-seed" value="-1" min="-1">
+                                    <button class="btn-icon" onclick="document.getElementById('avatar-seed').value=-1" title="随机">🎲</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-grid-2" style="margin-top:0.75rem">
+                            <div class="form-field">
+                                <label>用户标识</label>
+                                <input type="text" id="avatar-user" value="web_user" maxlength="100">
+                            </div>
+                            <div class="form-field form-field-action">
+                                <button class="btn-primary btn-generate" id="avatar-generate-btn">
+                                    ✨ 生成头像
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="avatar-result">
+                    <div class="result-card">
+                        <div class="result-preview" id="avatar-result-area">
+                            <div class="result-placeholder" id="avatar-placeholder">
+                                <div class="placeholder-icon">🎨</div>
+                                <p>配置参数后点击"生成头像"</p>
+                            </div>
+                            <div class="result-loading" id="avatar-loading" style="display:none">
+                                <div class="spinner-lg"></div>
+                                <p>正在生成中，请稍候...</p>
+                                <p class="loading-hint">首次生成可能需要加载模型，耗时较长</p>
+                            </div>
+                            <div class="result-image-wrap" id="avatar-result" style="display:none">
+                                <img id="avatar-image" src="" alt="生成的头像">
+                            </div>
+                            <div class="result-error" id="avatar-error" style="display:none"></div>
+                        </div>
+                        <div class="result-meta" id="avatar-meta" style="display:none">
+                            <div class="meta-grid" id="avatar-meta-grid"></div>
+                        </div>
+                        <div class="result-actions" id="avatar-actions" style="display:none">
+                            <button class="btn-secondary" onclick="downloadAvatar()">💾 下载</button>
+                            <button class="btn-secondary" onclick="reuseAvatarSeed()">🔄 同种子重新生成</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图片生成页 -->
+        <div class="page" id="page-generation">
+            <div class="page-header">
+                <h2>图片生成</h2>
+                <p class="page-desc">使用Stable Diffusion直接生成图片，支持完整参数控制</p>
+            </div>
+            <div class="gen-layout">
+                <div class="gen-config">
+                    <div class="card">
+                        <h3 class="card-title">📝 提示词</h3>
+                        <div class="form-field">
+                            <label>正向提示词</label>
+                            <textarea id="gen-prompt" placeholder="描述你想要生成的图片内容" rows="3"></textarea>
+                        </div>
+                        <div class="form-field" style="margin-top:0.75rem">
+                            <label>反向提示词</label>
+                            <textarea id="gen-neg-prompt" placeholder="描述你不想出现的内容" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">📐 尺寸与参数</h3>
+                        <div class="form-grid-3">
+                            <div class="form-field">
+                                <label>宽度</label>
+                                <input type="number" id="gen-width" value="512" min="64" max="2048" step="64">
+                            </div>
+                            <div class="form-field">
+                                <label>高度</label>
+                                <input type="number" id="gen-height" value="512" min="64" max="2048" step="64">
+                            </div>
+                            <div class="form-field">
+                                <label>推理步数</label>
+                                <input type="number" id="gen-steps" value="20" min="1" max="150">
+                            </div>
+                        </div>
+                        <div class="form-grid-3" style="margin-top:0.75rem">
+                            <div class="form-field">
+                                <label>引导系数 (CFG)</label>
+                                <input type="number" id="gen-cfg" value="7.5" min="1" max="30" step="0.5">
+                            </div>
+                            <div class="form-field">
+                                <label>随机种子</label>
+                                <div class="seed-input">
+                                    <input type="number" id="gen-seed" value="-1" min="-1">
+                                    <button class="btn-icon" onclick="document.getElementById('gen-seed').value=-1" title="随机">🎲</button>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <label>采样器</label>
+                                <select id="gen-scheduler">
+                                    <option value="euler">Euler</option>
+                                    <option value="euler_a">Euler A</option>
+                                    <option value="dpm++2m">DPM++ 2M</option>
+                                    <option value="dpm++2m_karras">DPM++ 2M Karras</option>
+                                    <option value="ddim">DDIM</option>
+                                    <option value="lms">LMS</option>
+                                    <option value="pndm">PNDM</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="card-title">🤖 模型配置</h3>
+                        <div class="form-grid-3">
+                            <div class="form-field">
+                                <label>SD模型</label>
+                                <select id="gen-sd-model"><option value="">默认模型</option></select>
+                            </div>
+                            <div class="form-field">
+                                <label>LoRA模型</label>
+                                <select id="gen-lora-model"><option value="">不使用</option></select>
+                            </div>
+                            <div class="form-field">
+                                <label>LoRA权重: <span id="gen-lora-weight-display">1.0</span></label>
+                                <input type="range" id="gen-lora-weight" min="0" max="2" step="0.1" value="1.0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-primary btn-generate" id="gen-generate-btn">
+                        ✨ 生成图片
+                    </button>
+                </div>
+
+                <div class="gen-result">
+                    <div class="result-card">
+                        <div class="result-preview" id="gen-result-area">
+                            <div class="result-placeholder" id="gen-placeholder">
+                                <div class="placeholder-icon">🖼️</div>
+                                <p>输入提示词后点击"生成图片"</p>
+                            </div>
+                            <div class="result-loading" id="gen-loading" style="display:none">
+                                <div class="spinner-lg"></div>
+                                <p>正在生成中...</p>
+                            </div>
+                            <div class="result-image-wrap" id="gen-result" style="display:none">
+                                <img id="gen-image" src="" alt="生成的图片">
+                            </div>
+                            <div class="result-error" id="gen-error" style="display:none"></div>
+                        </div>
+                        <div class="result-meta" id="gen-meta" style="display:none">
+                            <div class="meta-grid" id="gen-meta-grid"></div>
+                        </div>
+                        <div class="result-actions" id="gen-actions" style="display:none">
+                            <button class="btn-secondary" onclick="downloadGenImage()">💾 下载</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史记录页 -->
+        <div class="page" id="page-history">
+            <div class="page-header">
+                <h2>历史记录</h2>
+                <p class="page-desc">查看和管理头像生成历史</p>
+            </div>
+            <div class="card">
+                <div class="history-toolbar">
+                    <div class="form-field" style="max-width:200px">
+                        <label>用户筛选</label>
+                        <input type="text" id="history-user" placeholder="用户ID">
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn-secondary" onclick="loadHistory()">🔍 查询</button>
+                        <button class="btn-danger" onclick="clearHistory()">🗑️ 清除历史</button>
+                    </div>
+                </div>
+                <div class="history-table-wrap">
+                    <table class="history-table" id="history-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>时间</th>
+                                <th>用户</th>
+                                <th>风格</th>
+                                <th>分辨率</th>
+                                <th>耗时</th>
+                                <th>种子</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body"></tbody>
+                    </table>
+                </div>
+                <div class="history-pagination" id="history-pagination"></div>
+                <div class="empty-state" id="history-empty" style="display:none">
+                    <p>暂无历史记录</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 模型管理页 -->
+        <div class="page" id="page-models">
+            <div class="page-header">
+                <h2>模型管理</h2>
+                <p class="page-desc">查看和管理SD基础模型与LoRA扩展模型</p>
+            </div>
+            <div class="models-grid">
+                <div class="card">
+                    <div class="card-header-row">
+                        <h3 class="card-title">📦 SD基础模型</h3>
+                        <button class="btn-secondary btn-sm" onclick="refreshModels()">🔄 刷新</button>
+                    </div>
+                    <div id="sd-models-list" class="model-list"></div>
+                </div>
+                <div class="card">
+                    <div class="card-header-row">
+                        <h3 class="card-title">🔧 LoRA模型</h3>
+                    </div>
+                    <div id="lora-models-list" class="model-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统管理页 -->
+        <div class="page" id="page-system">
+            <div class="page-header">
+                <h2>系统管理</h2>
+                <p class="page-desc">查看系统配置、缓存状态和服务信息</p>
+            </div>
+            <div class="system-grid">
+                <div class="card">
+                    <h3 class="card-title">📊 缓存状态</h3>
+                    <div class="cache-stats" id="cache-stats"></div>
+                    <div class="cache-actions">
+                        <button class="btn-danger" onclick="clearCache()">🗑️ 清除缓存</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">🔧 系统配置</h3>
+                    <div class="config-info" id="system-config"></div>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">💚 服务状态</h3>
+                    <div class="service-status" id="service-status"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toast-container"></div>
+    <div class="overlay" id="overlay"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

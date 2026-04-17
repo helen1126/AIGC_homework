@@ -114,3 +114,7 @@ if config.storage.enabled and os.path.exists(config.storage.path):
 _demo_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "demo")
 if os.path.isdir(_demo_dir):
     app.mount("/demo", StaticFiles(directory=_demo_dir, html=True), name="demo")
+
+_frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
+if os.path.isdir(_frontend_dir):
+    app.mount("/frontend", StaticFiles(directory=_frontend_dir, html=True), name="frontend")
