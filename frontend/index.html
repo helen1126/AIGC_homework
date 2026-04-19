@@ -3,15 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI动漫头像生成服务</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+    <title>AniGen · AI动漫头像生成</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;900&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+    <!-- Custom Cursor -->
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-ring" id="cursor-ring"></div>
+
+    <!-- Starfield -->
+    <canvas id="starfield"></canvas>
+
+    <!-- Sakura petals -->
+    <div class="sakura-wrap" id="sakura"></div>
+
+    <!-- Noise overlay -->
+    <div class="noise-overlay"></div>
+
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="logo">🎨</div>
-            <h1 class="sidebar-title">AI头像生成</h1>
+            <a href="landing.html" class="sidebar-logo-link">
+                <div class="logo-mark">✦</div>
+                <h1 class="sidebar-title">AniGen</h1>
+            </a>
         </div>
         <nav class="sidebar-nav">
             <a href="#" class="nav-item active" data-page="avatar">
@@ -40,41 +58,127 @@
                 <span class="status-dot"></span>
                 <span class="status-text">检测中...</span>
             </div>
+            <a href="landing.html" class="back-home-link">← 返回首页</a>
         </div>
     </aside>
 
     <div class="mobile-header">
         <button class="menu-btn" id="menu-btn">☰</button>
-        <h1>🎨 AI头像生成</h1>
+        <h1>✦ AniGen</h1>
         <div class="status-dot-mobile" id="status-mobile"></div>
     </div>
 
     <main class="main-content">
+
         <!-- 动漫头像生成页 -->
         <div class="page active" id="page-avatar">
             <div class="page-header">
+                <p class="page-eyebrow">AI 创作</p>
                 <h2>动漫头像生成</h2>
                 <p class="page-desc">选择风格、自定义角色特征，生成独一无二的动漫头像</p>
             </div>
             <div class="avatar-layout">
                 <div class="avatar-config">
                     <div class="card">
-                        <h3 class="card-title">📝 角色描述</h3>
-                        <textarea id="avatar-desc" placeholder="描述你想要生成的动漫角色，如：一位勇敢的女骑士，手持发光的剑" rows="3"></textarea>
+                        <h3 class="card-title"><span class="card-icon">📝</span> 角色描述</h3>
+                        <textarea id="avatar-desc" placeholder="描述你想要生成的动漫角色，如：一位勇敢的女骑士，手持发光的剑..." rows="3"></textarea>
                     </div>
 
                     <div class="card">
-                        <h3 class="card-title">🎭 动漫风格</h3>
-                        <div class="style-grid" id="style-grid"></div>
+                        <h3 class="card-title"><span class="card-icon">🎭</span> 动漫风格</h3>
+                        <div class="style-grid" id="style-grid">
+                            <div class="style-card active" data-id="japanese">
+                                <div class="style-name">🎌 日系动漫</div>
+                                <div class="style-desc">经典日本动漫画风</div>
+                            </div>
+                            <div class="style-card" data-id="american_comic">
+                                <div class="style-name">🦸 美式漫画</div>
+                                <div class="style-desc">美漫英雄风格</div>
+                            </div>
+                            <div class="style-card" data-id="chibi_q">
+                                <div class="style-name">🎀 Q版萌系</div>
+                                <div class="style-desc">可爱迷你风格</div>
+                            </div>
+                            <div class="style-card" data-id="watercolor">
+                                <div class="style-name">🎨 水彩插画</div>
+                                <div class="style-desc">柔和水彩画风</div>
+                            </div>
+                            <div class="style-card" data-id="cyberpunk">
+                                <div class="style-name">🌃 赛博朋克</div>
+                                <div class="style-desc">未来霓虹科幻</div>
+                            </div>
+                            <div class="style-card" data-id="pixel_art">
+                                <div class="style-name">👾 像素风格</div>
+                                <div class="style-desc">复古游戏像素</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="card">
-                        <h3 class="card-title">👤 角色特征</h3>
-                        <div class="features-grid" id="features-grid"></div>
+                        <h3 class="card-title"><span class="card-icon">👤</span> 角色特征</h3>
+                        <div class="features-grid" id="features-grid">
+                            <div class="feature-item">
+                                <label>发型</label>
+                                <select data-feature="hair_style">
+                                    <option value="">不指定</option>
+                                    <option value="long_straight">长直发</option>
+                                    <option value="long_curly">长卷发</option>
+                                    <option value="short">短发</option>
+                                    <option value="twin_tails">双马尾</option>
+                                    <option value="ponytail">马尾</option>
+                                </select>
+                            </div>
+                            <div class="feature-item">
+                                <label>发色</label>
+                                <select data-feature="hair_color">
+                                    <option value="">不指定</option>
+                                    <option value="black">黑发</option>
+                                    <option value="brown">棕发</option>
+                                    <option value="blonde">金发</option>
+                                    <option value="silver">银发</option>
+                                    <option value="pink">粉发</option>
+                                    <option value="blue">蓝发</option>
+                                </select>
+                            </div>
+                            <div class="feature-item">
+                                <label>眼色</label>
+                                <select data-feature="eye_color">
+                                    <option value="">不指定</option>
+                                    <option value="black">黑色</option>
+                                    <option value="brown">棕色</option>
+                                    <option value="blue">蓝色</option>
+                                    <option value="green">绿色</option>
+                                    <option value="purple">紫色</option>
+                                    <option value="red">红色</option>
+                                </select>
+                            </div>
+                            <div class="feature-item">
+                                <label>服装</label>
+                                <select data-feature="clothing_style">
+                                    <option value="">不指定</option>
+                                    <option value="school_uniform">校服</option>
+                                    <option value="casual">休闲装</option>
+                                    <option value="traditional">传统和服</option>
+                                    <option value="fantasy">奇幻盔甲</option>
+                                    <option value="futuristic">未来战服</option>
+                                </select>
+                            </div>
+                            <div class="feature-item">
+                                <label>表情</label>
+                                <select data-feature="expression">
+                                    <option value="">不指定</option>
+                                    <option value="smile">微笑</option>
+                                    <option value="serious">严肃</option>
+                                    <option value="shy">害羞</option>
+                                    <option value="happy">开心</option>
+                                    <option value="cool">酷炫</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="card">
-                        <h3 class="card-title">🤖 模型配置</h3>
+                        <h3 class="card-title"><span class="card-icon">🤖</span> 模型配置</h3>
                         <div class="form-grid-3">
                             <div class="form-field">
                                 <label>SD模型</label>
@@ -85,14 +189,14 @@
                                 <select id="avatar-lora-model"><option value="">不使用</option></select>
                             </div>
                             <div class="form-field">
-                                <label>LoRA权重: <span id="lora-weight-display">1.0</span></label>
+                                <label>LoRA权重: <span id="lora-weight-display" class="weight-badge">1.0</span></label>
                                 <input type="range" id="avatar-lora-weight" min="0" max="2" step="0.1" value="1.0">
                             </div>
                         </div>
                     </div>
 
                     <div class="card">
-                        <h3 class="card-title">⚙️ 生成参数</h3>
+                        <h3 class="card-title"><span class="card-icon">⚙️</span> 生成参数</h3>
                         <div class="form-grid-3">
                             <div class="form-field">
                                 <label>分辨率</label>
@@ -121,7 +225,7 @@
                             </div>
                             <div class="form-field form-field-action">
                                 <button class="btn-primary btn-generate" id="avatar-generate-btn">
-                                    ✨ 生成头像 <kbd class="kbd">Ctrl+↵</kbd>
+                                    ✦ 生成头像 <kbd class="kbd">Ctrl+↵</kbd>
                                 </button>
                             </div>
                         </div>
@@ -132,8 +236,8 @@
                     <div class="result-card">
                         <div class="result-preview" id="avatar-result-area">
                             <div class="result-placeholder" id="avatar-placeholder">
-                                <div class="placeholder-icon">🎨</div>
-                                <p>配置参数后点击"生成头像"</p>
+                                <div class="placeholder-icon">🌸</div>
+                                <p>配置参数后点击「生成头像」</p>
                             </div>
                             <div class="result-loading" id="avatar-loading" style="display:none">
                                 <div class="spinner-lg"></div>
@@ -160,25 +264,26 @@
         <!-- 图片生成页 -->
         <div class="page" id="page-generation">
             <div class="page-header">
+                <p class="page-eyebrow">自由创作</p>
                 <h2>图片生成</h2>
-                <p class="page-desc">使用Stable Diffusion直接生成图片，支持完整参数控制</p>
+                <p class="page-desc">使用 Stable Diffusion 直接生成图片，支持完整参数控制</p>
             </div>
             <div class="gen-layout">
                 <div class="gen-config">
                     <div class="card">
-                        <h3 class="card-title">📝 提示词</h3>
-                        <div class="form-field">
+                        <h3 class="card-title"><span class="card-icon">📝</span> 提示词</h3>
+                        <div class="form-field" style="margin-bottom:0.75rem">
                             <label>正向提示词</label>
-                            <textarea id="gen-prompt" placeholder="描述你想要生成的图片内容" rows="3"></textarea>
+                            <textarea id="gen-prompt" placeholder="描述你想要生成的内容，建议使用英文..." rows="3"></textarea>
                         </div>
-                        <div class="form-field" style="margin-top:0.75rem">
+                        <div class="form-field">
                             <label>反向提示词</label>
-                            <textarea id="gen-neg-prompt" placeholder="描述你不想出现的内容" rows="2"></textarea>
+                            <textarea id="gen-negative" placeholder="描述你不希望出现的内容..." rows="2"></textarea>
                         </div>
                     </div>
 
                     <div class="card">
-                        <h3 class="card-title">📐 尺寸与参数</h3>
+                        <h3 class="card-title"><span class="card-icon">⚙️</span> 生成参数</h3>
                         <div class="form-grid-3">
                             <div class="form-field">
                                 <label>宽度</label>
@@ -189,14 +294,12 @@
                                 <input type="number" id="gen-height" value="512" min="64" max="2048" step="64">
                             </div>
                             <div class="form-field">
-                                <label>推理步数</label>
-                                <input type="number" id="gen-steps" value="20" min="1" max="150">
+                                <label>推理步数: <span id="gen-steps-display" class="weight-badge">20</span></label>
+                                <input type="range" id="gen-steps" min="1" max="150" value="20" oninput="document.getElementById('gen-steps-display').textContent=this.value">
                             </div>
-                        </div>
-                        <div class="form-grid-3" style="margin-top:0.75rem">
                             <div class="form-field">
-                                <label>引导系数 (CFG)</label>
-                                <input type="number" id="gen-cfg" value="7.5" min="1" max="30" step="0.5">
+                                <label>CFG Scale: <span id="gen-cfg-display" class="weight-badge">7.5</span></label>
+                                <input type="range" id="gen-cfg" min="1" max="30" step="0.5" value="7.5" oninput="document.getElementById('gen-cfg-display').textContent=this.value">
                             </div>
                             <div class="form-field">
                                 <label>随机种子</label>
@@ -221,7 +324,7 @@
                     </div>
 
                     <div class="card">
-                        <h3 class="card-title">🤖 模型配置</h3>
+                        <h3 class="card-title"><span class="card-icon">🤖</span> 模型配置</h3>
                         <div class="form-grid-3">
                             <div class="form-field">
                                 <label>SD模型</label>
@@ -232,14 +335,14 @@
                                 <select id="gen-lora-model"><option value="">不使用</option></select>
                             </div>
                             <div class="form-field">
-                                <label>LoRA权重: <span id="gen-lora-weight-display">1.0</span></label>
+                                <label>LoRA权重: <span id="gen-lora-weight-display" class="weight-badge">1.0</span></label>
                                 <input type="range" id="gen-lora-weight" min="0" max="2" step="0.1" value="1.0">
                             </div>
                         </div>
                     </div>
 
                     <button class="btn-primary btn-generate" id="gen-generate-btn">
-                        ✨ 生成图片 <kbd class="kbd">Ctrl+↵</kbd>
+                        ✦ 生成图片 <kbd class="kbd">Ctrl+↵</kbd>
                     </button>
                 </div>
 
@@ -248,7 +351,7 @@
                         <div class="result-preview" id="gen-result-area">
                             <div class="result-placeholder" id="gen-placeholder">
                                 <div class="placeholder-icon">🖼️</div>
-                                <p>输入提示词后点击"生成图片"</p>
+                                <p>输入提示词后点击「生成图片」</p>
                             </div>
                             <div class="result-loading" id="gen-loading" style="display:none">
                                 <div class="spinner-lg"></div>
@@ -273,6 +376,7 @@
         <!-- 历史记录页 -->
         <div class="page" id="page-history">
             <div class="page-header">
+                <p class="page-eyebrow">创作档案</p>
                 <h2>历史记录</h2>
                 <p class="page-desc">查看和管理头像生成历史</p>
             </div>
@@ -280,7 +384,7 @@
                 <div class="history-toolbar">
                     <div class="form-field" style="max-width:200px">
                         <label>用户筛选</label>
-                        <input type="text" id="history-user" placeholder="用户ID">
+                        <input type="text" id="history-user" placeholder="用户 ID">
                     </div>
                     <div class="toolbar-actions">
                         <button class="btn-secondary" onclick="loadHistory()">🔍 查询</button>
@@ -305,7 +409,7 @@
                 </div>
                 <div class="history-pagination" id="history-pagination"></div>
                 <div class="empty-state" id="history-empty" style="display:none">
-                    <p>暂无历史记录</p>
+                    <p>🌸 暂无历史记录</p>
                 </div>
             </div>
         </div>
@@ -313,20 +417,21 @@
         <!-- 模型管理页 -->
         <div class="page" id="page-models">
             <div class="page-header">
+                <p class="page-eyebrow">资源管理</p>
                 <h2>模型管理</h2>
-                <p class="page-desc">查看和管理SD基础模型与LoRA扩展模型</p>
+                <p class="page-desc">查看和管理 SD 基础模型与 LoRA 扩展模型</p>
             </div>
             <div class="models-grid">
                 <div class="card">
                     <div class="card-header-row">
-                        <h3 class="card-title">📦 SD基础模型</h3>
+                        <h3 class="card-title"><span class="card-icon">📦</span> SD 基础模型</h3>
                         <button class="btn-secondary btn-sm" onclick="refreshModels()">🔄 刷新</button>
                     </div>
                     <div id="sd-models-list" class="model-list"></div>
                 </div>
                 <div class="card">
                     <div class="card-header-row">
-                        <h3 class="card-title">🔧 LoRA模型</h3>
+                        <h3 class="card-title"><span class="card-icon">🔧</span> LoRA 模型</h3>
                     </div>
                     <div id="lora-models-list" class="model-list"></div>
                 </div>
@@ -336,23 +441,24 @@
         <!-- 系统管理页 -->
         <div class="page" id="page-system">
             <div class="page-header">
+                <p class="page-eyebrow">系统监控</p>
                 <h2>系统管理</h2>
                 <p class="page-desc">查看系统配置、缓存状态和服务信息</p>
             </div>
             <div class="system-grid">
                 <div class="card">
-                    <h3 class="card-title">📊 缓存状态</h3>
+                    <h3 class="card-title"><span class="card-icon">📊</span> 缓存状态</h3>
                     <div class="cache-stats" id="cache-stats"></div>
                     <div class="cache-actions">
                         <button class="btn-danger" onclick="clearCache()">🗑️ 清除缓存</button>
                     </div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title">🔧 系统配置</h3>
+                    <h3 class="card-title"><span class="card-icon">🔧</span> 系统配置</h3>
                     <div class="config-info" id="system-config"></div>
                 </div>
                 <div class="card">
-                    <h3 class="card-title">💚 服务状态</h3>
+                    <h3 class="card-title"><span class="card-icon">💚</span> 服务状态</h3>
                     <div class="service-status" id="service-status"></div>
                 </div>
             </div>
@@ -364,5 +470,80 @@
 
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
+    <script>
+    // ── Custom cursor ──
+    const _cur = document.getElementById('cursor');
+    const _ring = document.getElementById('cursor-ring');
+    let _mx=0,_my=0,_rx=0,_ry=0;
+    document.addEventListener('mousemove', e => {
+        _mx=e.clientX; _my=e.clientY;
+        _cur.style.left=_mx+'px'; _cur.style.top=_my+'px';
+    });
+    (function _animRing(){
+        _rx+=(_mx-_rx)*.12; _ry+=(_my-_ry)*.12;
+        _ring.style.left=_rx+'px'; _ring.style.top=_ry+'px';
+        requestAnimationFrame(_animRing);
+    })();
+    document.querySelectorAll('a,button,select,input,textarea').forEach(el=>{
+        el.addEventListener('mouseenter',()=>{
+            _cur.style.width='6px'; _cur.style.height='6px';
+            _ring.style.width='48px'; _ring.style.height='48px';
+            _ring.style.borderColor='rgba(125,249,232,.7)';
+        });
+        el.addEventListener('mouseleave',()=>{
+            _cur.style.width='12px'; _cur.style.height='12px';
+            _ring.style.width='36px'; _ring.style.height='36px';
+            _ring.style.borderColor='rgba(255,110,180,.5)';
+        });
+    });
+
+    // ── Starfield ──
+    (function(){
+        const c=document.getElementById('starfield');
+        const ctx=c.getContext('2d');
+        let W,H,stars=[];
+        function resize(){ W=c.width=innerWidth; H=c.height=innerHeight; }
+        function mkStar(){ return{x:Math.random()*W,y:Math.random()*H,r:Math.random()*.8+.2,s:Math.random()*.2+.03,o:Math.random(),do:Math.random()>.5?.004:-.004}; }
+        function init(){ resize(); stars=[]; for(let i=0;i<120;i++) stars.push(mkStar()); }
+        function draw(){
+            ctx.clearRect(0,0,W,H);
+            stars.forEach(s=>{
+                s.o+=s.do; if(s.o>1||s.o<0) s.do*=-1;
+                ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+                ctx.fillStyle=Math.random()>.7?`rgba(125,249,232,${s.o})`:`rgba(240,236,255,${s.o})`;
+                ctx.fill();
+                s.y+=s.s; if(s.y>H){ s.y=-4; s.x=Math.random()*W; }
+            });
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('resize',init);
+        init(); draw();
+    })();
+
+    // ── Fallback: static style-card click when API not loaded ──
+    document.getElementById('style-grid').addEventListener('click', function(e) {
+        const card = e.target.closest('.style-card');
+        if (!card) return;
+        this.querySelectorAll('.style-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+    });
+
+    // ── Sakura petals ──
+    (function(){
+        const wrap=document.getElementById('sakura');
+        const p=['🌸','✿','✦','⋆','·'];
+        for(let i=0;i<12;i++){
+            const el=document.createElement('div');
+            el.className='petal';
+            el.textContent=p[Math.floor(Math.random()*p.length)];
+            el.style.left=Math.random()*100+'vw';
+            el.style.fontSize=(.6+Math.random()*.7)+'rem';
+            el.style.animationDuration=(10+Math.random()*16)+'s';
+            el.style.animationDelay=(-Math.random()*20)+'s';
+            el.style.opacity=.25+Math.random()*.4;
+            wrap.appendChild(el);
+        }
+    })();
+    </script>
 </body>
 </html>

@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import app.utils.compat
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import load_config, get_config
@@ -117,6 +117,21 @@ async def global_exception_handler(request: Request, exc: Exception):
 )
 async def health_check() -> HealthResponse:
     return HealthResponse(status="ok", version="2.0.0")
+
+
+@app.get("/", include_in_schema=False)
+async def redirect_root():
+    return RedirectResponse(url="/frontend/landing.html")
+
+
+@app.get("/frontend", include_in_schema=False)
+async def redirect_frontend():
+    return RedirectResponse(url="/frontend/landing.html")
+
+
+@app.get("/frontend/", include_in_schema=False)
+async def redirect_frontend_slash():
+    return RedirectResponse(url="/frontend/landing.html")
 
 
 config = get_config()
