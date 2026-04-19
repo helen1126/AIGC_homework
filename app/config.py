@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 class ServerConfig(BaseModel):
     host: str = "0.0.0.0"
     port: int = 8000
+    request_timeout: int = Field(default=300, ge=30, le=3600, description="前端请求超时时间(秒)")
 
 
 class ModelsConfig(BaseModel):

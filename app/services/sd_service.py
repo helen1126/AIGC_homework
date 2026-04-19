@@ -29,6 +29,29 @@ class SDService:
         self._current_pipeline = None
         self._current_model_name: Optional[str] = None
         self._current_lora_name: Optional[str] = None
+        self._device = self._detect_device()
+        self._logger.info(f"SD服务初始化，设备: {self._device}")
+
+    def _detect_device(self) -> str:
+        try:
+            import torch
+            if torch.cuda.is_available():
+                device_name = torch.cuda.get_device_name(0)
+                self._logger.info(f"检测到CUDA设备: {device_name}")
+                return "cuda"
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                self._logger.info("检测到Apple MPS设备")
+                return "mps"
+        except ImportError:
+            pass
+        self._logger.warning("未检测到GPU，将使用CPU运行（速度较慢）")
+        return "cpu"
+
+    def _get_torch_dtype(self):
+        import torch
+        if self._device == "cuda":
+            return torch.float16
+        return torch.float32
 
     def generate(self, params: dict) -> dict:
         prompt = params["prompt"]
@@ -59,7 +82,8 @@ class SDService:
             f"开始生成图片 - 模型: {actual_sd_model}, "
             f"LoRA: {lora_model or '无'}, "
             f"提示词: {prompt[:50]}..., "
-            f"尺寸: {width}x{height}, 步数: {num_inference_steps}, 种子: {seed}"
+            f"尺寸: {width}x{height}, 步数: {num_inference_steps}, 种子: {seed}, "
+            f"设备: {self._device}"
         )
 
         try:
@@ -67,7 +91,7 @@ class SDService:
             pipeline = self._apply_scheduler(pipeline, scheduler)
 
             import torch
-            generator = torch.Generator(device="cpu").manual_seed(seed)
+            generator = torch.Generator(device=self._device).manual_seed(seed)
 
             start_time = time.time()
             image = pipeline(
@@ -157,15 +181,27 @@ class SDService:
                 PipelineClass = self._get_pipeline_class(model_type)
                 self._logger.info(f"检测到模型类型: {model_type}，使用 {PipelineClass.__name__}")
 
+                torch_dtype = self._get_torch_dtype()
+
                 if is_single_file:
                     self._current_pipeline = self._load_single_file_pipeline(
-                        PipelineClass, model_path, model_type
+                        PipelineClass, model_path, model_type, torch_dtype
                     )
                 else:
                     self._current_pipeline = PipelineClass.from_pretrained(
                         model_path,
-                        torch_dtype=torch.float32,
+                        torch_dtype=torch_dtype,
                     )
+
+                self._current_pipeline = self._current_pipeline.to(self._device)
+                self._logger.info(f"模型已加载到设备: {self._device}")
+
+                if self._device == "cuda":
+                    try:
+                        self._current_pipeline.enable_attention_slicing()
+                        self._logger.info("已启用注意力切片优化")
+                    except Exception:
+                        pass
 
             except Exception as e:
                 self._logger.error(f"模型加载失败: {str(e)}")
@@ -183,9 +219,7 @@ class SDService:
 
         return self._current_pipeline
 
-    def _load_single_file_pipeline(self, PipelineClass, model_path: str, model_type: str):
-        import torch
-
+    def _load_single_file_pipeline(self, PipelineClass, model_path: str, model_type: str, torch_dtype):
         pipeline_config = self._config.models.pipeline_config
         offline_mode = self._config.models.offline_mode
 
@@ -193,7 +227,7 @@ class SDService:
             self._logger.info(f"使用指定配置源: {pipeline_config}")
             return PipelineClass.from_single_file(
                 model_path,
-                torch_dtype=torch.float32,
+                torch_dtype=torch_dtype,
                 config=pipeline_config,
             )
 
@@ -201,7 +235,7 @@ class SDService:
             self._logger.info("离线模式：仅使用本地缓存")
             return PipelineClass.from_single_file(
                 model_path,
-                torch_dtype=torch.float32,
+                torch_dtype=torch_dtype,
                 local_files_only=True,
             )
 
@@ -210,7 +244,7 @@ class SDService:
                 self._logger.info(f"尝试加载模型（第{attempt + 1}次）...")
                 return PipelineClass.from_single_file(
                     model_path,
-                    torch_dtype=torch.float32,
+                    torch_dtype=torch_dtype,
                 )
             except Exception as e:
                 if attempt < 2:
@@ -221,7 +255,7 @@ class SDService:
                     try:
                         return PipelineClass.from_single_file(
                             model_path,
-                            torch_dtype=torch.float32,
+                            torch_dtype=torch_dtype,
                             local_files_only=True,
                         )
                     except Exception as fallback_err:

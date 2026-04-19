@@ -344,10 +344,16 @@
     }
 
     async function generateImage() {
-        const prompt = $("gen-prompt").value.trim();
+        const promptEl = $("gen-prompt");
+        if (!promptEl) {
+            toast("页面加载异常，请刷新页面重试", "error");
+            console.error("找不到 gen-prompt 元素");
+            return;
+        }
+        const prompt = promptEl.value.trim();
         if (!prompt) {
             toast("请输入正向提示词", "error");
-            $("gen-prompt").focus();
+            promptEl.focus();
             return;
         }
 
@@ -357,18 +363,18 @@
 
         const payload = {
             prompt,
-            negative_prompt: $("gen-neg-prompt").value,
-            width: parseInt($("gen-width").value) || 512,
-            height: parseInt($("gen-height").value) || 512,
-            num_inference_steps: parseInt($("gen-steps").value) || 20,
-            guidance_scale: parseFloat($("gen-cfg").value) || 7.5,
-            seed: parseInt($("gen-seed").value) || -1,
-            scheduler: $("gen-scheduler").value,
-            lora_weight: parseFloat($("gen-lora-weight").value),
+            negative_prompt: $("gen-negative")?.value || "",
+            width: parseInt($("gen-width")?.value) || 512,
+            height: parseInt($("gen-height")?.value) || 512,
+            num_inference_steps: parseInt($("gen-steps")?.value) || 20,
+            guidance_scale: parseFloat($("gen-cfg")?.value) || 7.5,
+            seed: parseInt($("gen-seed")?.value) || -1,
+            scheduler: $("gen-scheduler")?.value || "euler",
+            lora_weight: parseFloat($("gen-lora-weight")?.value) || 1.0,
         };
 
-        const sdModel = $("gen-sd-model").value;
-        const loraModel = $("gen-lora-model").value;
+        const sdModel = $("gen-sd-model")?.value;
+        const loraModel = $("gen-lora-model")?.value;
         if (sdModel) payload.sd_model = sdModel;
         if (loraModel) payload.lora_model = loraModel;
 

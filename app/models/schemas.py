@@ -49,6 +49,7 @@ class SystemConfigResponse(BaseModel):
     storage_path: str = Field(description="暂存路径")
     sd_models_path: str = Field(description="SD模型目录")
     lora_models_path: str = Field(description="LoRA模型目录")
+    request_timeout: int = Field(default=300, description="前端请求超时时间(秒)")
 
 
 class HealthResponse(BaseModel):

@@ -6,14 +6,41 @@ const API = (() => {
         lora: { data: null, ts: 0 },
     };
     const CACHE_TTL = 30000;
+    let configTimeout = 300000;
+    let configPromise = null;
 
-    async function request(method, path, body = null, timeout = 120000) {
+    async function loadConfig() {
+        try {
+            const resp = await fetch(`${BASE}/api/v1/models/config`);
+            if (resp.ok) {
+                const data = await resp.json();
+                configTimeout = (data.request_timeout || 300) * 1000;
+                console.log("请求超时配置:", configTimeout / 1000, "秒");
+            }
+        } catch (e) {
+            console.warn("加载配置失败，使用默认超时时间");
+        }
+    }
+
+    configPromise = loadConfig();
+
+    async function ensureConfigLoaded() {
+        if (configPromise) {
+            await configPromise;
+            configPromise = null;
+        }
+    }
+
+    async function request(method, path, body = null, timeout = null) {
+        await ensureConfigLoaded();
+        const actualTimeout = timeout || configTimeout;
+        console.log("请求超时设置:", actualTimeout / 1000, "秒");
         const opts = {
             method,
             headers: { "Content-Type": "application/json" },
         };
         if (typeof AbortSignal.timeout === "function") {
-            opts.signal = AbortSignal.timeout(timeout);
+            opts.signal = AbortSignal.timeout(actualTimeout);
         }
         if (body && method !== "GET") opts.body = JSON.stringify(body);
         const resp = await fetch(`${BASE}${path}`, opts);

@@ -94,4 +94,5 @@ async def get_system_config() -> SystemConfigResponse:
         storage_path=config.storage.path,
         sd_models_path=config.models.sd_base_path,
         lora_models_path=config.models.lora_base_path,
+        request_timeout=config.server.request_timeout,
     )
